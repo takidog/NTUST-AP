@@ -7,6 +7,7 @@ import 'package:ap_common/models/course_data.dart';
 import 'package:ap_common/utils/ap_localizations.dart';
 import 'package:ap_common/utils/preferences.dart';
 import 'package:ap_common_firebase/utils/firebase_analytics_utils.dart';
+import 'package:dio/adapter.dart';
 import 'package:dio/dio.dart';
 import 'package:dio_cookie_manager/dio_cookie_manager.dart';
 import 'package:flutter/foundation.dart';
@@ -31,6 +32,8 @@ class CourseHelper {
 
   static bool isLogin = false;
 
+  static Map<String, bool> cookieExists = {};
+
   int captchaErrorCount = 0;
 
   static CourseHelper get instance {
@@ -46,10 +49,30 @@ class CourseHelper {
     return _instance;
   }
 
+  void setProxy(String proxyIP) {
+    (dio.httpClientAdapter as DefaultHttpClientAdapter).onHttpClientCreate =
+        (client) {
+      client.findProxy = (uri) {
+        return "PROXY " + proxyIP;
+      };
+    };
+  }
+
   static initCookiesJar() {
     cookieJar = CookieJar();
     dio.interceptors.add(CookieManager(cookieJar));
     cookieJar.loadForRequest(Uri.parse(BASE_PATH));
+  }
+
+  void setCookie(String url,
+      {String cookieName, String cookieValue, String cookieDomain}) {
+    Cookie _tempCookie = Cookie(cookieName, cookieValue);
+    _tempCookie.domain = cookieDomain;
+    cookieJar.saveFromResponse(Uri.parse(url), [_tempCookie]);
+  }
+
+  void setHeader(String name, String value) {
+    dio.options.headers[name] = value;
   }
 
   void logout() {
@@ -192,11 +215,25 @@ class CourseHelper {
     captchaErrorCount = 0;
   }
 
+  Future<String> getCourseTableRawHtmlByDio() async {
+    // Only for test.
+    // CourseHelper.instance.setProxy("127.0.0.1:8888");
+    CourseHelper.instance.setHeader("user-agent",
+        "Mozilla/5.0 (iPhone; CPU iPhone OS 14_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148");
+    Response request =
+        await dio.get("https://courseselection.ntust.edu.tw/ChooseList/D01/D01",
+            options: Options(
+              followRedirects: false,
+            ));
+
+    return request.data;
+  }
+
   Future<CourseData> getCourseTable({
     GeneralCallback<CourseData> callback,
     String rawHtml,
   }) async {
-   // debugPrint(rawHtml);
+    // debugPrint(rawHtml);
     CourseData courseData = CourseData(
       courses: [],
       courseTables: CourseTables(),

@@ -10,6 +10,8 @@ import 'package:flutter/material.dart';
 import 'package:ntust_ap/api/sso_helper.dart';
 import 'package:ntust_ap/api/stu_helper.dart';
 
+import '../../api/course_helper.dart';
+
 class CoursePage extends StatefulWidget {
   @override
   _CoursePageState createState() => _CoursePageState();
@@ -45,6 +47,7 @@ class _CoursePageState extends State<CoursePage> {
   @override
   Widget build(BuildContext context) {
     ap = ApLocalizations.of(context);
+    // CourseHelper.instance.setProxy("127.0.0.1:8888");
     return CourseScaffold(
       state: _state,
       customStateHint: customStateHint,

@@ -8,6 +8,10 @@ import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:ntust_ap/api/course_helper.dart';
 import 'package:ntust_ap/api/stu_helper.dart';
 
+import 'course_helper.dart';
+import 'course_helper.dart';
+import 'course_helper.dart';
+
 enum SsoHelperState {
   loading,
   done,
@@ -76,6 +80,8 @@ class SsoHelper {
       case SsoHelperState.login:
         if (path == SsoHelper.COURSE_HOME) {
           loginCallback.onSuccess(GeneralResponse.success());
+          // share in app web view cookie to Dio cookie.
+          // CourseHelper.instance.setCookie("123", "1234");
           loginCallback = null;
         } else if (path.contains(SsoHelper.CHANGE_PASSWORD))
           loginCallback.onError(
@@ -97,7 +103,9 @@ class SsoHelper {
         break;
       case SsoHelperState.course:
         if (path == SsoHelper.COURSE_TABLE) {
-          String html = await webViewController.getHtml();
+          // String html = await webViewController.getHtml();
+          String html =
+              await CourseHelper.instance.getCourseTableRawHtmlByDio();
           await CourseHelper.instance.getCourseTable(
             callback: courseCallback,
             rawHtml: html,
@@ -155,6 +163,7 @@ class SsoHelper {
   }) async {
     userInfoCallback = callback;
     state = SsoHelperState.userInfo;
+
     await webViewController.loadUrl(url: USER_INFO_SCHOOL);
   }
 

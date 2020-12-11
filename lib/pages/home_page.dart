@@ -34,6 +34,7 @@ import 'package:ntust_ap/pages/user_info_page.dart';
 import 'package:ntust_ap/resourses/ap_assets.dart';
 import 'package:ntust_ap/utils/app_localizations.dart';
 
+import '../api/course_helper.dart';
 import 'study/course_page.dart';
 import 'login_page.dart';
 
@@ -60,6 +61,8 @@ class HomePageState extends State<HomePage> {
   UserInfo userInfo;
 
   Map<String, List<Announcement>> newsMap;
+
+  CookieManager _cookieManager = CookieManager.instance();
 
   List<Announcement> get newsList =>
       (newsMap == null) ? null : newsMap[AppLocalizations.locale.languageCode];
@@ -136,8 +139,23 @@ class HomePageState extends State<HomePage> {
               debugPrint('onTitleChanged $title $path');
             },
             onLoadStop: (controller, title) async {
-              debugPrint('onLoadStop $title');
               final path = await controller.getUrl();
+              debugPrint('onLoadStop $title  $path');
+
+              _cookieManager
+                  .getCookies(url: "https://ntust.edu.tw/")
+                  .then((value) => {
+                        value.forEach((element) {
+                          CourseHelper.instance.setCookie(
+                            path,
+                            cookieName: element.name,
+                            cookieValue: element.value,
+                            cookieDomain: element.domain,
+                          );
+                          // debugPrint("Cookie: ${element.name}: ${element.value} ${element.domain} \n");
+                        })
+                      });
+
               if (SsoHelper.state == SsoHelperState.done &&
                   path == SsoHelper.LOGIN) {
                 if (Preferences.getBool(Constants.PREF_AUTO_LOGIN, false))
